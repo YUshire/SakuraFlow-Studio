@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SakuraFlow Studio v1.0 — 黑板圆桌自组织多智能体画布平台</title>
+  <link rel="stylesheet" href="/styles.css?v=1.0" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">🌸</div>
+        <div>
+          <div class="brand-title-row">
+            <h1>SakuraFlow Studio</h1>
+            <span class="version-chip">v1.0 Blackboard AI</span>
+          </div>
+          <span class="brand-sub">Autonomous Roundtable Blackboard · Self-Organizing Visual DAG · Local CLI + Remote API + SSH GPU</span>
+        </div>
+      </div>
+
+      <nav class="nav-pills">
+        <button class="nav-btn active" data-tab="blackboard">🫧 圆桌黑板自组织</button>
+        <button class="nav-btn" data-tab="canvas">🌸 自由协作画布</button>
+        <button class="nav-btn" data-tab="agents">🧠 智能体中心与画像</button>
+        <button class="nav-btn" data-tab="guide">📖 论文与开源架构</button>
+      </nav>
+
+      <div class="topbar-right">
+        <span id="env-summary-pill" class="status-pill pill-idle">探测环境中...</span>
+        <span id="sse-status" class="status-pill pill-idle">● 连接实时流...</span>
+      </div>
+    </header>
+
+    <!-- VIEW 0 (NEW FLAGSHIP): AUTONOMOUS BLACKBOARD ROUNDTABLE -->
+    <section id="tab-blackboard" class="view active bb-view">
+      <div class="bb-split">
+        <!-- Left Config Column -->
+        <aside class="bb-sidebar">
+          <div class="bb-card">
+            <div class="bb-card-head">
+              <span class="hero-eyebrow" style="margin:0;">LBMAS · AUTOAGENTS · ROUNDTABLE</span>
+              <h2>🫧 发起多智能体圆桌自组织</h2>
+              <p class="muted">不预设固定工作流！由总意图解析官开场，在座智能体像真人团队一样按 1→2→3→4 顺序在共享黑板上自由认领角色、商定防死循环规则，并<strong>自主在画布上生成本次专属协作图谱</strong>。</p>
+            </div>
+
+            <div class="bb-form">
+              <label>
+                <span>任务 / 课题名称</span>
+                <input type="text" id="bb-title" placeholder="例如：跨学科科研方案攻关 / 开发个人知识库工具" />
+              </label>
+
+              <label>
+                <span>开放式任务目标（不限领域）</span>
+                <textarea id="bb-goal" rows="4" placeholder="描述你希望多智能体团队自主商讨并合力完成的目标..."></textarea>
+              </label>
+
+              <div class="preset-row">
+                <button type="button" class="btn btn-ghost btn-xs bb-idea-btn" data-idea="research">🔬 开放科研攻关</button>
+                <button type="button" class="btn btn-ghost btn-xs bb-idea-btn" data-idea="product">🛠️ 开源项目孵化</button>
+                <button type="button" class="btn btn-ghost btn-xs bb-idea-btn" data-idea="strategy">⚖️ 深度商业推演</button>
+              </div>
+
+              <label>
+                <span>👑 总意图解析智能体（总入口 · 默认取首个可用智能体）</span>
+                <select id="bb-chair-select"></select>
+              </label>
+
+              <div>
+                <div class="section-mini-head" style="margin-bottom:6px;">
+                  <span>👥 圆桌参会成员与发言顺序（1 → 2 → 3 → 4）</span>
+                  <span class="muted">可勾选并调序</span>
+                </div>
+                <div id="bb-roster-list" class="bb-roster-list"></div>
+              </div>
+
+              <label class="inline-check">
+                <input type="checkbox" id="bb-auto-exec" />
+                <span>商定生成画布后自动开始执行（不勾选则先在画布预览微调）</span>
+              </label>
+
+              <div class="bb-cta-row">
+                <button type="button" class="btn btn-primary" id="btn-bb-start" style="flex:1;">🫧 开启黑板圆桌协商</button>
+                <button type="button" class="btn btn-danger hidden" id="btn-bb-abort">⏹ 中止</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bb-card">
+            <div class="section-mini-head" style="margin-bottom:8px;">
+              <span>🕘 历史圆桌会议记录</span>
+              <span id="bb-history-count" class="count-pill">0</span>
+            </div>
+            <div id="bb-history-list" class="runs-list"></div>
+          </div>
+        </aside>
+
+        <!-- Right Live Shared Blackboard Arena -->
+        <div class="bb-arena">
+          <div class="bb-phase-bar">
+            <div class="bb-step" id="bb-step-intent">① 意图解析立项</div>
+            <span class="muted">➜</span>
+            <div class="bb-step" id="bb-step-roundtable">② 1-2-3-4 圆桌分工协商</div>
+            <span class="muted">➜</span>
+            <div class="bb-step" id="bb-step-synthesize">③ 防死循环校验 &amp; 自生成画布</div>
+            <span id="bb-phase-text" class="muted" style="margin-left:auto;"></span>
+          </div>
+
+          <!-- Consensus & Generated Canvas Summary Card -->
+          <div id="bb-consensus-card" class="bb-consensus hidden"></div>
+
+          <!-- Live Blackboard Transcript -->
+          <div id="bb-feed" class="bb-feed">
+            <div class="bb-empty-arena">
+              <div style="font-size:44px;margin-bottom:10px;">🫧🌸</div>
+              <h3>共享黑板议事厅已就绪</h3>
+              <p>在左侧输入你的任意目标，指定总意图解析智能体并排好 1、2、3、4 发言顺序，点击<strong>「开启黑板圆桌协商」</strong>——你将实时看到各位智能体在黑板上自主认领角色、设计协作连线、商定防死循环规则，并动态把它们自己的工作流画到 Sakura 画布上！</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 1: INTERACTIVE VISUAL CANVAS -->
+    <section id="tab-canvas" class="view canvas-view">
+      <div class="canvas-toolbar">
+        <div class="toolbar-group">
+          <button class="btn btn-primary btn-sm" id="btn-goto-bb">🫧 圆桌黑板自组织</button>
+          <span class="toolbar-label">或经典模板</span>
+          <select id="template-select" class="select-sm"></select>
+          <button class="btn btn-soft btn-sm" id="btn-add-node">＋ 添加实体</button>
+          <button class="btn btn-soft btn-sm" id="btn-auto-layout">✨ 自动排版</button>
+        </div>
+
+        <div class="toolbar-group">
+          <button class="btn btn-ghost btn-sm" id="btn-zoom-out">－</button>
+          <span id="zoom-label" class="zoom-label">100%</span>
+          <button class="btn btn-ghost btn-sm" id="btn-zoom-in">＋</button>
+          <button class="btn btn-ghost btn-sm" id="btn-zoom-reset">重置视图</button>
+        </div>
+
+        <div class="toolbar-group">
+          <label class="inline-check" title="当审查节点输出 VERDICT: REVISE 且存在打回连线时自动返工">
+            <input type="checkbox" id="chk-auto-revise" checked />
+            <span>审稿打回闭环</span>
+          </label>
+          <button class="btn btn-soft btn-sm hidden" id="btn-resume-run">⏩ 断点续跑</button>
+          <button class="btn btn-primary btn-sm" id="btn-run-canvas">▶ 启动画布协作</button>
+          <button class="btn btn-danger btn-sm hidden" id="btn-abort-run">⏹ 中止运行</button>
+        </div>
+      </div>
+
+      <div class="workspace-split">
+        <!-- 2D Canvas -->
+        <div id="canvas-viewport" class="canvas-viewport">
+          <div id="canvas-world" class="canvas-world">
+            <svg id="edges-svg" class="edges-svg">
+              <defs>
+                <marker id="arrow-flow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#f472b6"></path>
+                </marker>
+                <marker id="arrow-active" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#e11d48"></path>
+                </marker>
+                <marker id="arrow-loop" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#a855f7"></path>
+                </marker>
+              </defs>
+              <g id="edges-layer"></g>
+              <path id="temp-edge" class="temp-edge hidden" d=""></path>
+            </svg>
+            <div id="nodes-layer" class="nodes-layer"></div>
+          </div>
+
+          <div class="canvas-hint">
+            <span>💡 拖动实体自由布局 · 右侧端口拖向左侧端口建立连线 · 支持本地 CLI 与远程 API 混排协作</span>
+            <span id="run-badge-bar" class="hidden"></span>
+          </div>
+        </div>
+
+        <!-- Right Inspector Drawer -->
+        <aside class="inspector-drawer">
+          <div class="drawer-tabs">
+            <button class="drawer-tab active" data-dtab="config">⚙️ 实体</button>
+            <button class="drawer-tab" data-dtab="thinking">💭 思考流</button>
+            <button class="drawer-tab" data-dtab="pool">💬 消息池</button>
+            <button class="drawer-tab" data-dtab="deliverables">🎁 最终成果</button>
+          </div>
+
+          <!-- DTab 1: Config -->
+          <div id="dtab-config" class="drawer-body active">
+            <div id="config-empty" class="empty-note">
+              点击画布中的任意<strong>长方形实体</strong>或<strong>连线</strong>，编辑其身份、绑定的本地 CLI / 远程 API 模型与提示词。
+            </div>
+
+            <div id="config-trigger" class="config-form hidden">
+              <div class="config-badge">🌸 任务 / 课题输入源</div>
+              <label>
+                <span>实体标题</span>
+                <input type="text" id="cfg-t-title" />
+              </label>
+              <label>
+                <span>领域副标签</span>
+                <input type="text" id="cfg-t-tag" />
+              </label>
+              <label>
+                <span>研究课题 / 协作目标描述</span>
+                <textarea id="cfg-t-goal" rows="5"></textarea>
+              </label>
+              <label>
+                <span>自定义共享工作空间目录（留空自动创建）</span>
+                <input type="text" id="cfg-t-workspace" placeholder="默认: workspaces/<run-id>" />
+              </label>
+            </div>
+
+            <div id="config-agent" class="config-form hidden">
+              <div class="config-head-row">
+                <div class="config-badge">🤖 智能体实体节点</div>
+                <button class="btn btn-danger-ghost btn-xs" id="btn-delete-node">删除节点</button>
+              </div>
+              <label>
+                <span>实体名称</span>
+                <input type="text" id="cfg-a-title" />
+              </label>
+              <label>
+                <span>角色标签</span>
+                <input type="text" id="cfg-a-tag" />
+              </label>
+              <label>
+                <span>绑定引擎（本地 CLI / 远程 API / 模拟器）</span>
+                <select id="cfg-a-agent"></select>
+              </label>
+              <div id="cfg-a-model-hint" class="model-hint-box"></div>
+              <label>
+                <span>模型覆写（可选，留空使用默认模型）</span>
+                <input type="text" id="cfg-a-model" placeholder="例: claude-opus-5-5-medium 或 gpt-4o" />
+              </label>
+              <label>
+                <span>角色职责与行为准则 (System Prompt)</span>
+                <textarea id="cfg-a-prompt" rows="5"></textarea>
+              </label>
+            </div>
+
+            <div id="config-edge" class="config-form hidden">
+              <div class="config-head-row">
+                <div class="config-badge">🔗 实体关系连线</div>
+                <button class="btn btn-danger-ghost btn-xs" id="btn-delete-edge">删除连线</button>
+              </div>
+              <div id="cfg-e-endpoints" class="model-hint-box"></div>
+              <label>
+                <span>关系标签</span>
+                <input type="text" id="cfg-e-label" />
+              </label>
+              <label>
+                <span>连线类型</span>
+                <select id="cfg-e-type">
+                  <option value="flow">正常协作流转 (Forward Flow)</option>
+                  <option value="review_loop">审查/审稿打回闭环 (Review Loop)</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="divider"></div>
+            <div class="runs-mini-section">
+              <div class="section-mini-head">
+                <span>🕘 历史协作运行记录</span>
+                <span id="runs-count" class="count-pill">0</span>
+              </div>
+              <div id="runs-list" class="runs-list"></div>
+            </div>
+          </div>
+
+          <!-- DTab 2: Live Thinking Stream -->
+          <div id="dtab-thinking" class="drawer-body">
+            <div class="stream-head">
+              <strong id="stream-node-title">选择画布节点查看实时思考流</strong>
+              <span id="stream-node-meta" class="muted"></span>
+            </div>
+            <pre id="stream-box" class="code-viewer">点击画布中的实体框，这里将实时呈现其思考流与完整输出。</pre>
+          </div>
+
+          <!-- DTab 3: Shared Message Pool -->
+          <div id="dtab-pool" class="drawer-body">
+            <div id="pool-list" class="pool-list">
+              <div class="empty-note">启动画布后，实体之间的每次上下文交接都将记录于此。</div>
+            </div>
+          </div>
+
+          <!-- DTab 4: Final Deliverables & Artifact Index (NEW!) -->
+          <div id="dtab-deliverables" class="drawer-body">
+            <div id="deliv-empty" class="empty-note">
+              尚无完成的协作产物。运行画布或选择左侧历史记录后，这里会直接提炼出<strong>最关键最终成果</strong>与各节点产出文件映射。
+            </div>
+
+            <div id="deliv-content" class="deliv-content hidden">
+              <!-- Primary Final Deliverable Hero -->
+              <div id="deliv-hero" class="deliv-hero"></div>
+
+              <!-- Per-node Deliverable Mapping -->
+              <div class="section-mini-head">
+                <span>📋 各实体产物清点</span>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                  <button class="btn btn-primary btn-xs" id="btn-download-zip">📥 下载成果包 (.zip)</button>
+                  <button class="btn btn-soft btn-xs" id="btn-copy-ws-path">📋 复制路径</button>
+                  <button class="btn btn-ghost btn-xs" id="btn-open-ws" title="仅当通过桌面启动脚本在本机交互会话运行时可弹出资源管理器">📂 呼出文件夹</button>
+                </div>
+              </div>
+              <div id="ws-path-banner" class="model-hint-box" style="font-family:var(--font-mono);font-size:11px;word-break:break-all;"></div>
+              <div id="deliv-nodes" class="deliv-nodes"></div>
+
+              <!-- Workspace Files & Preview -->
+              <div class="section-mini-head">
+                <span>📁 完整文件预览</span>
+                <span id="ws-path-label" class="muted"></span>
+              </div>
+              <div id="files-list" class="files-list"></div>
+              <pre id="file-viewer" class="code-viewer file-viewer">点击上方任意成果或文件查看全文...</pre>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- VIEW 2: AGENT HUB (LOCAL DISCOVERY + REMOTE API + AUTHORIZED PROFILING) -->
+    <section id="tab-agents" class="view page-view">
+      <!-- Authorization & Environment Banner -->
+      <div class="sakura-card auth-banner">
+        <div>
+          <span class="hero-eyebrow">CROSS-PLATFORM DISCOVERY &amp; AUTHORIZED PROFILING</span>
+          <h2>本地智能体自动探测 · 远程 API 接入 · 授权能力画像</h2>
+          <p class="muted" style="margin-top:6px;max-width:820px;">
+            SakuraFlow 不会硬编码任何本机路径或臆造模型画像。上线开源后，它会先扫描当前电脑的本地 CLI 智能体（零 API Key 复用你的已登录态），同时允许无本地 CLI 的用户接入任意 <strong>Base URL + API Key</strong> 远程模型。点击下方授权按钮，系统会向你已启用的智能体发出轻量自检请求，动态生成真实画像。
+          </p>
+        </div>
+        <div class="auth-actions">
+          <button class="btn btn-soft" id="btn-refresh-agents">🔄 重新扫描本地环境</button>
+          <button class="btn btn-primary" id="btn-profile-all">🔐 授权一键自检全部智能体</button>
+        </div>
+      </div>
+
+      <!-- Remote API Agent Builder -->
+      <div class="sakura-card remote-builder">
+        <div class="env-head">
+          <div>
+            <h3>☁️ 接入远程 API 模型（Base URL + API Key 模式）</h3>
+            <p class="muted">即使电脑未安装任何本地 CLI，也可接入 OpenAI / Anthropic 兼容协议的任意远程模型，直接拖入画布并与本地智能体混排协作（密钥仅存于本地 <code>data/remote_agents.json</code>，已加入 <code>.gitignore</code>）。</p>
+          </div>
+          <div class="preset-row">
+            <button class="btn btn-ghost btn-xs remote-preset" data-preset="deepseek">DeepSeek</button>
+            <button class="btn btn-ghost btn-xs remote-preset" data-preset="openai">OpenAI</button>
+            <button class="btn btn-ghost btn-xs remote-preset" data-preset="openrouter">OpenRouter</button>
+            <button class="btn btn-ghost btn-xs remote-preset" data-preset="siliconflow">硅基流动</button>
+          </div>
+        </div>
+        <form id="remote-agent-form" class="remote-form-grid">
+          <input type="text" id="ra-name" placeholder="显示名称，如 DeepSeek R1 远程" required />
+          <select id="ra-protocol">
+            <option value="openai">OpenAI 兼容 (/chat/completions)</option>
+            <option value="anthropic">Anthropic 兼容 (/messages)</option>
+          </select>
+          <input type="text" id="ra-baseurl" placeholder="Base URL，如 https://api.deepseek.com/v1" required />
+          <input type="text" id="ra-model" placeholder="Model ID，如 deepseek-reasoner" required />
+          <input type="password" id="ra-apikey" placeholder="API Key (sk-...)" required />
+          <button type="submit" class="btn btn-primary">＋ 添加远程智能体</button>
+        </form>
+      </div>
+
+      <!-- SSH Remote Server & GPU Compute Cluster Builder (NEW!) -->
+      <div class="sakura-card remote-builder">
+        <div class="env-head">
+          <div>
+            <h3>⚡ 接入 SSH 远程服务器 / GPU 算力节点（远程实验与环境调度接口）</h3>
+            <p class="muted">通过系统原生 OpenSSH 连接实验室 GPU 服务器、AutoDL 或云端 Linux 主机：既可一键探测远端 <code>nvidia-smi</code> 显卡算力与 Conda/Python 环境，也可直接作为画布节点或供本地智能体远程调度算力（配置存于本地 <code>data/ssh_hosts.json</code>，已加入 <code>.gitignore</code>）。</p>
+          </div>
+        </div>
+        <form id="ssh-host-form" class="remote-form-grid">
+          <input type="text" id="ssh-name" placeholder="节点名称，如 实验室 A100 算力服" required />
+          <input type="text" id="ssh-host" placeholder="Host / IP，如 192.168.1.100" required />
+          <input type="text" id="ssh-port" placeholder="端口 (默认 22)" value="22" />
+          <input type="text" id="ssh-user" placeholder="用户名，如 root 或 ubuntu" value="root" required />
+          <input type="text" id="ssh-key" placeholder="私钥路径 (可选，如 ~/.ssh/id_rsa，留空走默认免密)" />
+          <input type="text" id="ssh-workdir" placeholder="远端工作目录" value="~/sakuraflow_workspace" />
+          <input type="text" id="ssh-runner" placeholder="远端执行器 (如 python3 / conda run -n ml python / bash)" value="python3" />
+          <button type="submit" class="btn btn-primary">＋ 添加 SSH 算力节点</button>
+        </form>
+      </div>
+
+      <!-- Agent Profile Cards -->
+      <div id="agents-showcase" class="agents-showcase"></div>
+
+      <!-- Optional Local CLI Env Overrides -->
+      <div class="sakura-card env-card">
+        <div class="env-head">
+          <div>
+            <h3>🔑 本地 CLI 可选环境变量注入</h3>
+            <p class="muted">若某些本地 CLI 未登录桌面端（例如未装 WorkBuddy 时的 <code>dsh</code>），可在此安全注入如 <code>DEEPSEEK_API_KEY</code>，仅对当前子进程生效。</p>
+          </div>
+          <div id="env-badges" class="env-badges"></div>
+        </div>
+        <div class="env-row">
+          <input type="text" id="env-key" value="DEEPSEEK_API_KEY" placeholder="环境变量名" />
+          <input type="password" id="env-val" placeholder="输入 Key 值（留空保存即移除）" />
+          <button class="btn btn-soft" id="btn-save-env">保存环境变量</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: ARCHITECTURE & OPEN-SOURCE GUIDE -->
+    <section id="tab-guide" class="view page-view">
+      <div class="page-hero">
+        <div>
+          <span class="hero-eyebrow">OPEN-SOURCE ARCHITECTURE · DUAL-MODE ENGINE</span>
+          <h2>双轨运行原理与 GitHub 开源设计说明</h2>
+          <p>专为跨平台开源与实战复现设计：无论用户电脑上装了哪些本地 CLI，还是只有几个远程 API Key，都能在 30 秒内零依赖启动并跑通可视化多智能体协作。</p>
+        </div>
+      </div>
+
+      <div class="guide-grid">
+        <article class="sakura-card guide-card">
+          <span class="tag-pill">轨道 A · 🖥️ 本地 CLI 复用登录态</span>
+          <h3>零 API Key、按需拉起原生进程</h3>
+          <p>自动探测本机已安装的 <code>agy</code>、<code>claude</code>、<code>codex</code>、<code>dsh</code>、<code>gemini</code>、<code>opencode</code>、<code>aider</code>、<code>ollama</code>。运行时按需拉起官方无头 CLI 子进程，直接复用本地合法登录态、反代网关、沙箱与 MCP，干完即退、不占内存、不污染桌面端对话列表。</p>
+        </article>
+        <article class="sakura-card guide-card">
+          <span class="tag-pill">轨道 B · ☁️ 远程 API 流式接入</span>
+          <h3>Base URL + API Key 零环境门槛</h3>
+          <p>内置零依赖原生 <code>fetch</code> 流式解析器，兼容 OpenAI（支持 <code>reasoning_content</code> 深度思考流）与 Anthropic 协议。无本地 CLI 也能立刻开跑，更支持在<strong>同一张画布上将本地 CLI 与远程 API 实体自由混排连线</strong>。</p>
+        </article>
+        <article class="sakura-card guide-card">
+          <span class="tag-pill">前沿黑板论文 · LbMAS &amp; NeurIPS 2025</span>
+          <h3>共享黑板 + 圆桌自组织（告别死板工作流）</h3>
+          <p>借鉴 <strong>LbMAS (2025)</strong>、<strong>NeurIPS 2025 Blackboard MAS</strong> 与 <strong>AutoAgents (IJCAI 2024) / DyLAN (COLM 2024) / AFlow (ICLR 2025)</strong>：不再由人类写死固定流程，而是让总意图解析官立项黑板，所有可用智能体按 1-2-3-4 顺序圆桌认领角色、自主协商连线与防死循环契约，并用确定性 DFS 环检测将共识实时渲染为可执行 DAG 画布。</p>
+        </article>
+        <article class="sakura-card guide-card">
+          <span class="tag-pill">学术基础 · MetaGPT &amp; ChatDev</span>
+          <h3>共享消息池 + 有界打回闭环 + 成果索引</h3>
+          <p>融合 MetaGPT 共享消息池与 ChatDev 独立审查返工闭环，并在每个节点结束时自动比对共享工作空间文件增量，运行结束后置顶呈现<strong>最终成果总览卡片</strong>、一键打包 <code>.zip</code> 下载与 <code>DELIVERABLES_INDEX.md</code>。</p>
+        </article>
+        <article class="sakura-card guide-card">
+          <span class="tag-pill">生产级鲁棒性 · Enterprise Ready</span>
+          <h3>防崩、防卡死、防僵尸进程、断点续跑</h3>
+          <p>内置动态授权自检、模板自动绑定可用智能体（杜绝未安装报错）、220ms SSE 节流合批、活跃心跳看门狗、Windows 完整进程树清理（<code>taskkill /T /F</code>）与中断自动校准 + 一键断点续跑。</p>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <!-- Document Reader Modal for Instant Deliverable Preview -->
+  <div id="doc-modal" class="doc-modal hidden" role="dialog" aria-modal="true">
+    <div class="doc-modal-backdrop" id="doc-modal-backdrop"></div>
+    <div class="doc-modal-card">
+      <div class="doc-modal-head">
+        <div>
+          <h3 id="doc-modal-title">文档预览</h3>
+          <span id="doc-modal-path" class="muted"></span>
+        </div>
+        <div class="doc-modal-actions">
+          <button class="btn btn-soft btn-xs" id="btn-modal-copy">📋 复制全文</button>
+          <button class="btn btn-ghost btn-xs" id="btn-modal-open-dir">📂 打开所在文件夹</button>
+          <button class="btn btn-danger-ghost btn-xs" id="btn-modal-close">✕ 关闭</button>
+        </div>
+      </div>
+      <pre id="doc-modal-body" class="doc-modal-body"></pre>
+    </div>
+  </div>
+
+  <script src="/app.js?v=1.0"></script>
+</body>
+</html>

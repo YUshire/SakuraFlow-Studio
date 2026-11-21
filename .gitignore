@@ -1,0 +1,9 @@
+data/
+workspaces/
+showcase_video/build/
+__pycache__/
+*.pyc
+*.mp4
+.DS_Store
+Thumbs.db
+*.log

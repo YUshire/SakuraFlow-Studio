@@ -1,0 +1,25 @@
+{
+  "name": "sakuraflow-studio",
+  "version": "1.0.0",
+  "description": "Local Multi-Agent Visual Canvas & Orchestration Platform — Connect heterogeneous local AI agents (Antigravity, Claude Code, Codex, DeepSeek Harness) on an open DAG canvas with live thinking flow.",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "keywords": [
+    "multi-agent",
+    "ai-orchestration",
+    "workflow-canvas",
+    "metagpt",
+    "chatdev",
+    "claude-code",
+    "codex",
+    "antigravity",
+    "deepseek"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
